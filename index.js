@@ -30,6 +30,7 @@ async function run() {
         // await client.connect();
 
         const toysCollection = client.db('toys').collection('car-toys')
+        const featureToys = client.db('toys').collection('feature-product')
 
         app.get('/alltoys', async (req, res) => {
             // get my toys through email
@@ -49,7 +50,11 @@ async function run() {
             const result = await toysCollection.findOne(query)
             res.send(result)
         })
-
+        //  feater product for client side
+        app.get('/featuretoys',async(req,res)=>{
+            const result = await featureToys.find().toArray();
+            res.send(result)
+        })
 
 
 
@@ -64,23 +69,23 @@ async function run() {
 
         // update toys
 
-        app.patch('/alltoys/:id',async(req,res)=>{
-            const id =req.params.id;
-            const updatedAddedToys= req.body;
-            const filter = {_id:new ObjectId(id)}
+        app.patch('/alltoys/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedAddedToys = req.body;
+            const filter = { _id: new ObjectId(id) }
             const updatedToys = {
-                $set:{
-                    status:updatedAddedToys.status
+                $set: {
+                    status: updatedAddedToys.status
                 }
             }
-            const result= await toysCollection.updateOne(filter,updatedToys)
+            const result = await toysCollection.updateOne(filter, updatedToys)
             res.send(result)
         })
 
         // delete toys
-        app.delete('/alltoys/:id',async(req,res)=>{
+        app.delete('/alltoys/:id', async (req, res) => {
             const id = req.params.id;
-            const filter ={_id:new ObjectId(id)}
+            const filter = { _id: new ObjectId(id) }
             const result = await toysCollection.deleteOne(filter)
             res.send(result)
         })
