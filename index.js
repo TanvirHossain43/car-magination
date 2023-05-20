@@ -32,27 +32,35 @@ async function run() {
         const toysCollection = client.db('toys').collection('car-toys')
 
         app.get('/alltoys', async (req, res) => {
-            const result = await toysCollection.find().toArray()
+            // get my toys through email
+            console.log(req.query.email)
+            let query = {}
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            }
+            const result = await toysCollection.find(query).toArray()
             res.send(result)
 
         })
 
-        app.get('/alltoys/:id',async(req,res)=>{
+        app.get('/alltoys/:id', async (req, res) => {
             const id = req.params.id;
-           const query ={_id : new ObjectId(id)}
-           const result = await toysCollection.findOne(query)
-           res.send(result)
+            const query = { _id: new ObjectId(id) }
+            const result = await toysCollection.findOne(query)
+            res.send(result)
         })
+
+
 
 
         // post toy
 
-app.post('/alltoys',async(req,res)=>{
-    const newToy =req.body;
-    const result = await toysCollection.insertOne(newToy);
-    res.send(result)
-    console.log(newToy)
-})
+        app.post('/alltoys', async (req, res) => {
+            const newToy = req.body;
+            const result = await toysCollection.insertOne(newToy);
+            res.send(result)
+
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
