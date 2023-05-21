@@ -31,11 +31,12 @@ async function run() {
 
         const toysCollection = client.db('toys').collection('car-toys')
         const featureToys = client.db('toys').collection('feature-product')
-        
+
 
         app.get('/alltoys', async (req, res) => {
             const sort = req.query.sort;
             const limit = parseInt(req.query.limit) || 20;
+
             const query = req.query.email ? { email: req.query.email } : {};
 
             try {
@@ -46,24 +47,21 @@ async function run() {
                 res.status(500).send('Internal Server Error');
             }
 
-            const search = {title: { $regex: search, $options: 'i'}}
-            const options = {
-                // sort matched documents in descending order by rating
-                sort: { 
-                    "price": sort === 'asc' ? 1 : -1
-                }
-            }
-            const result =await toysCollection.find(search,options).toArray()
-            res.send(result)
-               
         });
 
+
         app.get('/categorytoys', async (req, res) => {
+            const sort = req.query.sort;
             let query = {}
             if (req.query?.email) {
                 query = { email: req.query.email }
             }
-            const result = await toysCollection.find(query).toArray()
+            const options = {
+                sort: {
+                    "price": sort === 'asc' ? 1 : -1
+                }
+            }
+            const result = await toysCollection.find(query,options).toArray()
             res.send(result)
         })
 
