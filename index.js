@@ -31,18 +31,55 @@ async function run() {
 
         const toysCollection = client.db('toys').collection('car-toys')
         const featureToys = client.db('toys').collection('feature-product')
+        
 
         app.get('/alltoys', async (req, res) => {
-            // get my toys through email
-            console.log(req.query.email)
+            const sort = req.query.sort;
+            const limit = parseInt(req.query.limit) || 20;
+            const query = req.query.email ? { email: req.query.email } : {};
+
+            try {
+                const result = await toysCollection.find(query).limit(limit).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error('Error retrieving toys:', error);
+                res.status(500).send('Internal Server Error');
+            }
+
+            const search = {title: { $regex: search, $options: 'i'}}
+            const options = {
+                // sort matched documents in descending order by rating
+                sort: { 
+                    "price": sort === 'asc' ? 1 : -1
+                }
+            }
+            const result =await toysCollection.find(search,options).toArray()
+            res.send(result)
+               
+        });
+
+        app.get('/categorytoys', async (req, res) => {
             let query = {}
             if (req.query?.email) {
                 query = { email: req.query.email }
             }
             const result = await toysCollection.find(query).toArray()
             res.send(result)
-
         })
+
+        app.get('/categorytoys/:text', async (req, res) => {
+
+            console.log(req.params.text);
+
+            if (req.params.text == "sports" || req.params.text == "police" || req.params.text == "truck") {
+                const result = await toysCollection
+                    .find({ sub_category: req.params.text })
+                    .toArray();
+                console.log(result);
+                return res.send(result);
+            }
+
+        });
 
         app.get('/alltoys/:id', async (req, res) => {
             const id = req.params.id;
@@ -50,8 +87,12 @@ async function run() {
             const result = await toysCollection.findOne(query)
             res.send(result)
         })
-        //  feater product for client side
-        app.get('/featuretoys',async(req,res)=>{
+
+
+
+
+        //  feature product for client side
+        app.get('/featuretoys', async (req, res) => {
             const result = await featureToys.find().toArray();
             res.send(result)
         })
@@ -71,16 +112,21 @@ async function run() {
 
         app.patch('/alltoys/:id', async (req, res) => {
             const id = req.params.id;
-            const updatedAddedToys = req.body;
-            const filter = { _id: new ObjectId(id) }
-            const updatedToys = {
+            const updatedToy = req.body
+            const query = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updateData = {
                 $set: {
-                    status: updatedAddedToys.status
+                    price: updatedToy.price,
+                    toy_description: updatedToy.toy_description,
+                    available_quantity: updatedToy.available_quantity
                 }
             }
-            const result = await toysCollection.updateOne(filter, updatedToys)
+
+            const result = await toysCollection.updateOne(query, updateData, options)
             res.send(result)
-        })
+
+        });
 
         // delete toys
         app.delete('/alltoys/:id', async (req, res) => {
@@ -91,7 +137,7 @@ async function run() {
         })
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
